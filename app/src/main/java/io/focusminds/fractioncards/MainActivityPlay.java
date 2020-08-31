@@ -5,11 +5,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.view.View;
+import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
@@ -23,12 +28,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import pl.droidsonroids.gif.GifImageView;
+
 public class MainActivityPlay extends AppCompatActivity {
 
-    TextView numTxt1, numTxt2, numTxt3, numTxt4, scoreTxt, timerTxt;
+    TextView numTxt1, numTxt2, numTxt3, numTxt4, scoreTxt, timerTxt, finishScoreTxt, finishCloseBtn, outCloseBtn;
     ObjectAnimator animation, animation2;
 //    ImageView reduceScoreImg, addScoreImg;
-    ImageView cardImg1, cardImg2, cardImg3, cardImg4;
+    ImageView cardImg1, cardImg2, cardImg3, cardImg4, closeBtn;
     int timerSec = 60;
     Button startBtn, ansBtn;
     List<String> numbersList = new ArrayList<>();
@@ -36,14 +43,19 @@ public class MainActivityPlay extends AppCompatActivity {
     AnimatorSet set, set2, set3, set4;
     Animation fadeInAnim, fadeOutAnim;
     Random rand;
-    static int score= 10;
+    int score= 1;
     double btn1Value = 0.00, btn2Value = 0.00, btn3Value = 0.00, btn4Value = 0.00, usrResult = 0.00, calcResult =0.00;
     boolean btn1Clicked = false, btn2Clicked = false, btn3Clicked = false, btn4Clicked = false;
+    CountDownTimer timer;
 //    int randnumsarr[] = new int[4];
 //    Fraction fraction = Fraction.getFraction("1/2");
     List<Integer> randnumsarr = new ArrayList<>(4);
     String val1= "", val2 ="";
     int i =0, randnum=0, numerator =0, denom =0;
+    Intent intent;
+    Runnable r, r2;
+    Handler handler2, handler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,6 +74,10 @@ public class MainActivityPlay extends AppCompatActivity {
         denomTxt = findViewById(R.id.denom_txt);
         scoreTxt = findViewById(R.id.score_txt);
         timerTxt = findViewById(R.id.timer_txt);
+        closeBtn = findViewById(R.id.exit_icon);
+        handler2 = new Handler();
+        handler = new Handler();
+
 //        reduceScoreImg = findViewById(R.id.reduce_score_star);
 //        addScoreImg = findViewById(R.id.add_score_star);
 
@@ -127,6 +143,13 @@ public class MainActivityPlay extends AppCompatActivity {
         }
 
 
+//        *****************************Close Button click******************************
+        closeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                popupDialogCreation("finish", scoreTxt.getText().toString());
+            }
+        });
 
 //        ***************************setting values to the cards on start click************
         startBtn.setOnClickListener(new View.OnClickListener() {
@@ -290,6 +313,7 @@ public class MainActivityPlay extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), "Correct Answer", Toast.LENGTH_SHORT).show();
                         score += 1;
                         scoreTxt.setText(""+score);
+                        jokerAdditionalPoints("Hello");
 //                        fadeOutAnim = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.fade_out);
 //                        animation = ObjectAnimator.ofFloat(addScoreImg,"translationY", 80f);
 //                        animation.setDuration(2000);
@@ -302,6 +326,11 @@ public class MainActivityPlay extends AppCompatActivity {
 //                                addScoreImg.setVisibility(View.INVISIBLE);
 //                            }
 //                        },2000);
+
+//                        ************************Game Completed for score 50**************************
+                        if(score == 20){
+                            popupDialogCreation("finish", "20");
+                        }
 
                     }
                     else{
@@ -320,6 +349,12 @@ public class MainActivityPlay extends AppCompatActivity {
 //                                reduceScoreImg.setVisibility(View.INVISIBLE);
 //                            }
 //                        },2000);
+
+
+//                        **********************Game Over Score 0************************
+                        if(score <= 0){
+                            popupDialogCreation("out", "0");
+                        }
                     }
 
                     numeratorTxt.setText("");
@@ -390,6 +425,10 @@ public class MainActivityPlay extends AppCompatActivity {
                     {
                         startBtn.setVisibility(View.VISIBLE);
                         ansBtn.setVisibility(View.INVISIBLE);
+                        //if(timer != null){
+//                            timer.cancel();
+                            startTimer();
+                       // }
 
 
 
@@ -405,7 +444,13 @@ public class MainActivityPlay extends AppCompatActivity {
 //    *********************Timer for game completion******************
     public void startTimer(){
 
-        new CountDownTimer(120000, 1000) {
+        if(timer != null) {
+            timer.cancel();
+            timer = null;
+            timerTxt.setText("00");
+            return;
+        }
+       timer = new CountDownTimer(120000, 1000) {
 
             public void onTick(long millisUntilFinished) {
                 timerTxt.setText(""+(millisUntilFinished/1000));
@@ -429,6 +474,7 @@ public class MainActivityPlay extends AppCompatActivity {
         numTxt2.setText("");
         numTxt3.setText("");
         numTxt4.setText("");
+        timer = null;
 
         rotations("anti-clockwise", cardImg1);
         rotations("anti-clockwise", cardImg2);
@@ -449,18 +495,35 @@ public class MainActivityPlay extends AppCompatActivity {
         if(direction.equals("clockwise")){
             set = (AnimatorSet) AnimatorInflater.loadAnimator(MainActivityPlay.this,R.animator.clockwise_flip);
 
-//            ********************Image assigning while rotation
-            Handler handler2 = new Handler();
-            handler2.postDelayed(new Runnable() {
+//            ********************Image assigning while rotation**********************
+//            Handler handler2 = new Handler();
+//            handler2.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    imageView.setImageResource(R.drawable.mirror_image);
+//                }
+//            },500);
+            r= new Runnable() {
                 @Override
                 public void run() {
                     imageView.setImageResource(R.drawable.mirror_image);
                 }
-            },500);
+            };
+            handler2.postDelayed(r,500);
 
 //            **************assigning visiblity to text while rotation/**************
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
+//            Handler handler = new Handler();
+//            handler.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    numTxt1.setVisibility(View.VISIBLE);
+//                    numTxt2.setVisibility(View.VISIBLE);
+//                    numTxt3.setVisibility(View.VISIBLE);
+//                    numTxt4.setVisibility(View.VISIBLE);
+//                }
+//            },1000);
+
+            r2= new Runnable() {
                 @Override
                 public void run() {
                     numTxt1.setVisibility(View.VISIBLE);
@@ -468,7 +531,8 @@ public class MainActivityPlay extends AppCompatActivity {
                     numTxt3.setVisibility(View.VISIBLE);
                     numTxt4.setVisibility(View.VISIBLE);
                 }
-            },1000);
+            };
+            handler.postDelayed(r2,1000);
 
         }
         else if(direction.equals("anti-clockwise")){
@@ -488,7 +552,64 @@ public class MainActivityPlay extends AppCompatActivity {
     }
 
 
+//    ************Creating Win/Out popup**********************
+    public void popupDialogCreation(String state, String score){
+        final Dialog popupDialog = new Dialog(MainActivityPlay.this);
+        popupDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        popupDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        popupDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                finish();
+            }
+        });
+        if(state.equals("finish")){
+            popupDialog.setContentView(R.layout.activity_finish_popup);
+            finishScoreTxt = popupDialog.findViewById(R.id.finish_score_txt);
+            finishCloseBtn = popupDialog.findViewById(R.id.finish_close_btn);
+            finishCloseBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    popupDialog.dismiss();
+                }
+            });
+            finishScoreTxt.setText((score));
+        }
+        else if(state.equals("out")){
+            popupDialog.setContentView(R.layout.activity_out_popup);
+            outCloseBtn = popupDialog.findViewById(R.id.out_close_btn);
+            outCloseBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    popupDialog.dismiss();
+                }
+            });
+        }
+        popupDialog.show();
+    }
 
+
+//  ************************implementation of jokers********************
+    public void jokerAdditionalPoints(String range){
+        final Dialog jokerPopup = new Dialog(MainActivityPlay.this);
+        jokerPopup.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        jokerPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.RED));
+        jokerPopup.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+
+            }
+        });
+        GifImageView imageView = new GifImageView(MainActivityPlay.this);
+        imageView.setImageResource(R.drawable.joker);
+        jokerPopup.show();
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                jokerPopup.dismiss();
+            }
+        }, 3000);
+    }
 
 
 //  *********************** String to double conversion**************
