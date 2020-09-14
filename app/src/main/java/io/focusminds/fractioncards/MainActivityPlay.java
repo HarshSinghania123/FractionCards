@@ -4,57 +4,46 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
 import android.app.Dialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.view.View;
 import android.view.Window;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import pl.droidsonroids.gif.GifImageView;
-
 public class MainActivityPlay extends AppCompatActivity {
 
-    TextView numTxt1, numTxt2, numTxt3, numTxt4, scoreTxt, timerTxt, finishScoreTxt, finishCloseBtn, outCloseBtn;
-    ObjectAnimator animation, animation2;
-//    ImageView reduceScoreImg, addScoreImg;
+    TextView numTxt1, numTxt2, numTxt3, numTxt4, scoreTxt, timerTxt, finishScoreTxt, finishCloseBtn, outCloseBtn, warningTxt, resultTxt;
     ImageView cardImg1, cardImg2, cardImg3, cardImg4, closeBtn;
-    int timerSec = 60;
     Button startBtn, ansBtn;
     List<String> numbersList = new ArrayList<>();
     EditText numeratorTxt, denomTxt;
-    AnimatorSet set, set2, set3, set4;
-    Animation fadeInAnim, fadeOutAnim;
+    AnimatorSet set;
     Random rand;
-    int score= 1;
+    int score= 10;
     double btn1Value = 0.00, btn2Value = 0.00, btn3Value = 0.00, btn4Value = 0.00, usrResult = 0.00, calcResult =0.00;
-    boolean btn1Clicked = false, btn2Clicked = false, btn3Clicked = false, btn4Clicked = false;
+    boolean btn1Clicked = false, btn2Clicked = false, btn3Clicked = false, btn4Clicked = false, jokerImpl = false;
     CountDownTimer timer;
-//    int randnumsarr[] = new int[4];
-//    Fraction fraction = Fraction.getFraction("1/2");
     List<Integer> randnumsarr = new ArrayList<>(4);
     String val1= "", val2 ="";
     int i =0, randnum=0, numerator =0, denom =0;
-    Intent intent;
     Runnable r, r2;
     Handler handler2, handler;
+    int counter = 120, selectCount = 0;
+    MediaPlayer btnClkSnd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,10 +66,9 @@ public class MainActivityPlay extends AppCompatActivity {
         closeBtn = findViewById(R.id.exit_icon);
         handler2 = new Handler();
         handler = new Handler();
-
-//        reduceScoreImg = findViewById(R.id.reduce_score_star);
-//        addScoreImg = findViewById(R.id.add_score_star);
-
+        warningTxt = findViewById(R.id.warning_txt);
+        resultTxt = findViewById(R.id.result_txt);
+        btnClkSnd = MediaPlayer.create(this, R.raw.btn_clk_snd);
         rand = new Random();
 
 //          **********************************adding 55 elements************************
@@ -147,6 +135,7 @@ public class MainActivityPlay extends AppCompatActivity {
         closeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                btnClkSnd.start();
                 popupDialogCreation("finish", scoreTxt.getText().toString());
             }
         });
@@ -156,24 +145,24 @@ public class MainActivityPlay extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
+                btnClkSnd.start();
+
                 btn1Clicked = false;
                 btn2Clicked = false;
                 btn3Clicked = false;
                 btn4Clicked = false;
-                numTxt1.setTextColor(Color.BLACK);
-                numTxt2.setTextColor(Color.BLACK);
-                numTxt3.setTextColor(Color.BLACK);
-                numTxt4.setTextColor(Color.BLACK);
+
+                selectCount = 0;
+                counter = 120;
+                resultTxt.setText("");
+
                 startBtn.setVisibility(View.INVISIBLE);
                 ansBtn.setVisibility(View.VISIBLE);
 
                 startTimer();
 
-
 //              ***************************Randomization of the list***********************
                 Collections.shuffle(numbersList);
-
-
 
 //               *************Creating a index list for randomization**************
                 while( i < 4)
@@ -192,247 +181,204 @@ public class MainActivityPlay extends AppCompatActivity {
                 numTxt3.setText(numbersList .get(randnumsarr.get(2)));
                 numTxt4.setText(numbersList .get(randnumsarr.get(3)));
 
-//                Handler handler = new Handler();
-//                handler.postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        numTxt1.setVisibility(View.VISIBLE);
-//                        numTxt2.setVisibility(View.VISIBLE);
-//                        numTxt3.setVisibility(View.VISIBLE);
-//                        numTxt4.setVisibility(View.VISIBLE);
-//                    }
-//                },1000);
-
-//                Handler handler2 = new Handler();
-//                handler2.postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        cardImg1.setImageResource(R.drawable.mirror_image);
-//                    }
-//                },500);
-
-
                 rotations("clockwise", cardImg1);
                 rotations("clockwise", cardImg2);
                 rotations("clockwise", cardImg3);
                 rotations("clockwise", cardImg4);
 
-//                set1 = (AnimatorSet) AnimatorInflater.loadAnimator(MainActivityPlay.this,R.animator.clockwise_flip);
-//                set2 = (AnimatorSet) AnimatorInflater.loadAnimator(MainActivityPlay.this,R.animator.clockwise_flip);
-//                set3 = (AnimatorSet) AnimatorInflater.loadAnimator(MainActivityPlay.this,R.animator.clockwise_flip);
-//                set4 = (AnimatorSet) AnimatorInflater.loadAnimator(MainActivityPlay.this,R.animator.clockwise_flip);
-//                set1.setTarget(cardImg1);
-//                set1.start();
-//                set2.setTarget(cardImg2);
-//                set2.start();
-//                set3.setTarget(cardImg3);
-//                set3.start();
-//                set4.setTarget(cardImg4);
-//                set4.start();
             }
         });
 
         numTxt1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                btnClkSnd.start();
+                warningTxt.setVisibility(View.INVISIBLE);
                 if(btn1Clicked){
+                    selectCount --;
                     btn1Clicked = false;
                     btn1Value = 0.00;
-                    numTxt1.setTextColor(Color.BLACK);
+                    cardImg1.setBackgroundResource(R.drawable.heart);
                 }else {
+                    selectCount ++;
                     String btnCaption = numTxt1.getText().toString();
                     btn1Value = parse(btnCaption);
                     btn1Clicked = true;
-                    numTxt1.setTextColor(Color.RED);
-
+                    cardImg1.setBackgroundResource(R.drawable.heart_selected);
                 }
+                resultTxt.setText("");
             }
         });
 
         numTxt2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                btnClkSnd.start();
+                warningTxt.setVisibility(View.INVISIBLE);
                 if(btn2Clicked){
+                    selectCount --;
                     btn2Clicked = false;
                     btn2Value = 0.00;
-                    numTxt2.setTextColor(Color.BLACK);
+                    cardImg2.setBackgroundResource(R.drawable.clover);
                 }else {
+                    selectCount ++;
                     String btnCaption = numTxt2.getText().toString();
                     btn2Value = parse(btnCaption);
                     btn2Clicked = true;
-                    numTxt2.setTextColor(Color.RED);
+                    cardImg2.setBackgroundResource(R.drawable.clover_selected);
                 }
+                resultTxt.setText("");
             }
         });
 
         numTxt3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(btn3Clicked){
+                btnClkSnd.start();
+                warningTxt.setVisibility(View.INVISIBLE);
+                if (btn3Clicked) {
+                    selectCount--;
                     btn3Clicked = false;
                     btn3Value = 0.00;
-                    numTxt3.setTextColor(Color.BLACK);
-                }else {
+                    cardImg3.setBackgroundResource(R.drawable.spade);
+                } else {
+                    selectCount++;
                     String btnCaption = numTxt3.getText().toString();
                     btn3Value = parse(btnCaption);
                     btn3Clicked = true;
-                    numTxt3.setTextColor(Color.RED);
+                    cardImg3.setBackgroundResource(R.drawable.spade_selected);
                 }
+                resultTxt.setText("");
             }
         });
 
         numTxt4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                btnClkSnd.start();
+                warningTxt.setVisibility(View.INVISIBLE);
                 if(btn4Clicked){
+                    selectCount --;
                     btn4Clicked = false;
                     btn4Value = 0.00;
-                    numTxt4.setTextColor(Color.BLACK);
+                    cardImg4.setBackgroundResource(R.drawable.diamond);
                 }else {
+                    selectCount ++;
                     String btnCaption = numTxt4.getText().toString();
                     btn4Value = parse(btnCaption);
                     btn4Clicked = true;
-                    numTxt4.setTextColor(Color.RED);
+                    cardImg4.setBackgroundResource(R.drawable.diamond_selected);
                 }
+                resultTxt.setText("");
             }
         });
 
         ansBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                btnClkSnd.start();
+                if(selectCount % 2 != 0 || selectCount == 0){
+                    warningTxt.setVisibility(View.VISIBLE);
+                }
+                else {
+                    if (!((numeratorTxt.getText().toString().equals("")) || (denomTxt.getText().toString().equals("")) ||
+                            (numeratorTxt.getText().toString().equals(" ")) || (denomTxt.getText().toString().equals(" ")) || (selectCount % 2 != 0) || (selectCount == 0))) {  // validation for empty edit text
+                        numerator = Integer.parseInt(numeratorTxt.getText().toString());
+                        denom = Integer.parseInt(denomTxt.getText().toString());
+                        usrResult = (double) numerator / denom;
+                        calcResult = btn1Value + btn2Value + btn3Value + btn4Value;
+                        val1 = String.format("%.4f", usrResult);
+                        val2 = String.format("%.4f", calcResult);
+                        if (val1.equalsIgnoreCase(val2)) {
+                            score += 1;
+                            scoreTxt.setText("" + score);
+                            resultTxt.setText("Correct");
 
 
-                if(!((numeratorTxt.getText().toString().equals("")) ||  (denomTxt.getText().toString().equals("")) || (numeratorTxt.getText().toString().equals(" ")) ||  (denomTxt.getText().toString().equals(" ")))){  // validation for empty edit text
-                    numerator = Integer.parseInt(numeratorTxt.getText().toString());
-                    denom = Integer.parseInt(denomTxt.getText().toString());
-                    usrResult = (double) numerator/denom;
-                    calcResult = btn1Value + btn2Value + btn3Value + btn4Value;
-                    val1 = String.format("%.4f",usrResult);
-                    val2 = String.format("%.4f",calcResult);
-                    if(val1.equalsIgnoreCase(val2)){
-                        Toast.makeText(getApplicationContext(), "Correct Answer", Toast.LENGTH_SHORT).show();
-                        score += 1;
-                        scoreTxt.setText(""+score);
-                        jokerAdditionalPoints("Hello");
-//                        fadeOutAnim = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.fade_out);
-//                        animation = ObjectAnimator.ofFloat(addScoreImg,"translationY", 80f);
-//                        animation.setDuration(2000);
-//                        animation.start();
-//                        addScoreImg.startAnimation(fadeOutAnim);
-//                        Handler handler2 = new Handler();
-//                        handler2.postDelayed(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                addScoreImg.setVisibility(View.INVISIBLE);
-//                            }
-//                        },2000);
+                            if (!(btn1Value == 0.00)) {
+                                numTxt1.setText("");
+                                rotations("anti-clockwise", cardImg1);
+                                btn1Value = 0.00;
+                                selectCount--;
+                            }
+                            if (!(btn2Value == 0.00)) {
+                                numTxt2.setText("");
+                                rotations("anti-clockwise", cardImg2);
+                                btn2Value = 0.00;
+                                selectCount--;
+                            }
+                            if (!(btn3Value == 0.00)) {
+                                numTxt3.setText("");
+                                rotations("anti-clockwise", cardImg3);
+                                btn3Value = 0.00;
+                                selectCount--;
+                            }
+                            if (!(btn4Value == 0.00)) {
+                                numTxt4.setText("");
+                                rotations("anti-clockwise", cardImg4);
+                                btn4Value = 0.00;
+                                selectCount--;
+                            }
 
 //                        ************************Game Completed for score 50**************************
-                        if(score == 20){
-                            popupDialogCreation("finish", "20");
-                        }
+                            if (score == 20) {
+                                popupDialogCreation("finish", "20");
+                            }
 
-                    }
-                    else{
-                        Toast.makeText(getApplicationContext(), "Wrong Answer C:"+ val2 + "  U:"+ val1, Toast.LENGTH_LONG).show();
-                        score -=1;
-                        scoreTxt.setText(""+score);
-//                        fadeInAnim = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.fade_in);
-//                        animation2 = ObjectAnimator.ofFloat(reduceScoreImg,"translationY", 70f);
-//                        animation2.setDuration(2000);
-//                        animation2.start();
-//                        reduceScoreImg.startAnimation(fadeInAnim);
-//                        Handler handler2 = new Handler();
-//                        handler2.postDelayed(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                reduceScoreImg.setVisibility(View.INVISIBLE);
-//                            }
-//                        },2000);
+                        } else {
+                            score -= 1;
+                            scoreTxt.setText("" + score);
+                            resultTxt.setText("Wrong");
 
+                            if (!(btn1Value == 0.00)) {
+                                cardImg1.setBackgroundResource(R.drawable.heart);
+                                btn1Clicked = false;
+                                btn1Value = 0.00;
+                                selectCount--;
+
+                            }
+                            if (!(btn2Value == 0.00)) {
+                                cardImg2.setBackgroundResource(R.drawable.clover);
+                                btn2Clicked = false;
+                                btn2Value = 0.00;
+                                selectCount--;
+                            }
+                            if (!(btn3Value == 0.00)) {
+                                cardImg3.setBackgroundResource(R.drawable.spade);
+                                btn3Clicked = false;
+                                btn3Value = 0.00;
+                                selectCount--;
+                            }
+                            if (!(btn4Value == 0.00)) {
+                                cardImg4.setBackgroundResource(R.drawable.diamond);
+                                btn4Clicked = false;
+                                btn4Value = 0.00;
+                                selectCount--;
+                            }
 
 //                        **********************Game Over Score 0************************
-                        if(score <= 0){
-                            popupDialogCreation("out", "0");
+                            if (score <= 0) {
+                                popupDialogCreation("out", "0");
+                            }
                         }
-                    }
 
-                    numeratorTxt.setText("");
-                    denomTxt.setText("");
-                    if(!(btn1Value == 0.00)){
-                        numTxt1.setText("");
-                        rotations("anti-clockwise", cardImg1);
-//                        set1 = (AnimatorSet) AnimatorInflater.loadAnimator(MainActivityPlay.this,R.animator.anti_clockwise_flip);
-//                        set1.setTarget(cardImg1);
-//                        set1.start();
-//                        Handler handler2 = new Handler();
-//                        handler2.postDelayed(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                cardImg1.setImageResource(R.drawable.ic_launcher_background);
-//                            }
-//                        },500);
+                        numeratorTxt.setText("");
+                        denomTxt.setText("");
 
-                        btn1Value = 0.00;
-                    }
-                    if(!(btn2Value == 0.00)){
-                        numTxt2.setText("");
-                        rotations("anti-clockwise", cardImg2);
-//                        set2 = (AnimatorSet) AnimatorInflater.loadAnimator(MainActivityPlay.this,R.animator.anti_clockwise_flip);
-//                        set2.setTarget(cardImg2);
-//                        set2.start();
-//                        Handler handler2 = new Handler();
-//                        handler2.postDelayed(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                cardImg2.setImageResource(R.drawable.ic_launcher_background);
-//                            }
-//                        },500);
-                        btn2Value = 0.00;
-                    }
-                    if(!(btn3Value == 0.00)){
-                        numTxt3.setText("");
-                        rotations("anti-clockwise", cardImg3);
-//                        set3 = (AnimatorSet) AnimatorInflater.loadAnimator(MainActivityPlay.this,R.animator.anti_clockwise_flip);
-//                        set3.setTarget(cardImg3);
-//                        set3.start();
-//                        Handler handler2 = new Handler();
-//                        handler2.postDelayed(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                cardImg3.setImageResource(R.drawable.ic_launcher_background);
-//                            }
-//                        },500);
-                        btn3Value = 0.00;
-                    }
-                    if(!(btn4Value == 0.00)){
-                        numTxt4.setText("");
-                        rotations("anti-clockwise", cardImg4);
-//                        set4 = (AnimatorSet) AnimatorInflater.loadAnimator(MainActivityPlay.this,R.animator.anti_clockwise_flip);
-//                        set4.setTarget(cardImg4);
-//                        set4.start();
-//                        Handler handler2 = new Handler();
-//                        handler2.postDelayed(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                cardImg4.setImageResource(R.drawable.ic_launcher_background);
-//                            }
-//                        },500);
-                        btn4Value = 0.00;
-                    }
+                        if (btn1Clicked && btn2Clicked && btn3Clicked && btn4Clicked) {
+                            startBtn.setVisibility(View.VISIBLE);
+                            ansBtn.setVisibility(View.INVISIBLE);
+                            btn1Clicked = false;
+                            btn2Clicked = false;
+                            btn3Clicked = false;
+                            btn4Clicked = false;
 
-                    if(btn1Clicked && btn2Clicked && btn3Clicked && btn4Clicked)
-                    {
-                        startBtn.setVisibility(View.VISIBLE);
-                        ansBtn.setVisibility(View.INVISIBLE);
-                        //if(timer != null){
-//                            timer.cancel();
                             startTimer();
-                       // }
-
-
-
-
+                        }
+                        if ((score == (rand.nextInt(5)) && !(jokerImpl))) {
+                            jokerAdditionalPoints("");
+                            jokerImpl = true;
+                        }
                     }
                 }
             }
@@ -442,22 +388,24 @@ public class MainActivityPlay extends AppCompatActivity {
 
 
 //    *********************Timer for game completion******************
-    public void startTimer(){
+    public void startTimer() {
 
-        if(timer != null) {
+        if (timer != null) {
             timer.cancel();
             timer = null;
             timerTxt.setText("00");
+            counter = 120;
             return;
         }
-       timer = new CountDownTimer(120000, 1000) {
+        timer = new CountDownTimer(120000, 1000) {
 
             public void onTick(long millisUntilFinished) {
-                timerTxt.setText(""+(millisUntilFinished/1000));
+                timerTxt.setText("" +(--counter ));
             }
 
             public void onFinish() {
                 timerTxt.setText("00");
+                counter = 120;
                 timesUp();
             }
         }.start();
@@ -475,6 +423,8 @@ public class MainActivityPlay extends AppCompatActivity {
         numTxt3.setText("");
         numTxt4.setText("");
         timer = null;
+        resultTxt.setText("");
+        warningTxt.setVisibility(View.INVISIBLE);
 
         rotations("anti-clockwise", cardImg1);
         rotations("anti-clockwise", cardImg2);
@@ -484,8 +434,10 @@ public class MainActivityPlay extends AppCompatActivity {
         btn2Value = 0.00;
         btn3Value = 0.00;
         btn4Value = 0.00;
-
-
+        btn1Clicked = false;
+        btn2Clicked = false;
+        btn3Clicked = false;
+        btn4Clicked = false;
 
     }
 
@@ -495,18 +447,19 @@ public class MainActivityPlay extends AppCompatActivity {
         if(direction.equals("clockwise")){
             set = (AnimatorSet) AnimatorInflater.loadAnimator(MainActivityPlay.this,R.animator.clockwise_flip);
 
-//            ********************Image assigning while rotation**********************
-//            Handler handler2 = new Handler();
-//            handler2.postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                    imageView.setImageResource(R.drawable.mirror_image);
-//                }
-//            },500);
+
             r= new Runnable() {
                 @Override
                 public void run() {
-                    imageView.setImageResource(R.drawable.mirror_image);
+                    if(imageView == cardImg1)
+                    imageView.setBackgroundResource(R.drawable.heart);
+                    else if(imageView == cardImg2)
+                    imageView.setBackgroundResource(R.drawable.clover);
+                    else if(imageView == cardImg3)
+                    imageView.setBackgroundResource(R.drawable.spade);
+                    else if(imageView == cardImg4)
+                    imageView.setBackgroundResource(R.drawable.diamond);
+
                 }
             };
             handler2.postDelayed(r,500);
@@ -541,7 +494,7 @@ public class MainActivityPlay extends AppCompatActivity {
             handler2.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    imageView.setImageResource(R.drawable.ic_launcher_background);
+                    imageView.setBackgroundResource(R.drawable.front_image);
                 }
             },500);
 
@@ -561,6 +514,7 @@ public class MainActivityPlay extends AppCompatActivity {
             @Override
             public void onDismiss(DialogInterface dialogInterface) {
                 finish();
+                btnClkSnd.stop();
             }
         });
         if(state.equals("finish")){
@@ -591,17 +545,18 @@ public class MainActivityPlay extends AppCompatActivity {
 
 //  ************************implementation of jokers********************
     public void jokerAdditionalPoints(String range){
+        score++;
+        scoreTxt.setText(""+score);
         final Dialog jokerPopup = new Dialog(MainActivityPlay.this);
         jokerPopup.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        jokerPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.RED));
+        jokerPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         jokerPopup.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialogInterface) {
 
             }
         });
-        GifImageView imageView = new GifImageView(MainActivityPlay.this);
-        imageView.setImageResource(R.drawable.joker);
+        jokerPopup.setContentView(R.layout.activity_joker_view);
         jokerPopup.show();
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
@@ -620,5 +575,15 @@ public class MainActivityPlay extends AppCompatActivity {
         } else {
             return Double.parseDouble(ratio);
         }
+    }
+    @Override
+    protected void onStop(){
+        handler2= null;
+        handler = null;
+        super.onStop();
+    }
+    @Override
+    protected  void onPause() {
+        super.onPause();
     }
 }
